@@ -96,6 +96,8 @@ fn search_and_replace(content: &str) -> Result<String> {
         .replace("{/green}", "</span>")
         .replace("{yellow}", "<span style='color:yellow'>")
         .replace("{/yellow}", "</span>")
+        .replace("{grey}", "<span style='color:gray'>")
+        .replace("{/grey}", "</span>")
         .replace("{gray}", "<span style='color:gray'>")
         .replace("{/gray}", "</span>")
         .replace("{question}", "<details><summary>Q: ")
@@ -198,16 +200,6 @@ impl MDBookPlus {
 
 /*
             s,{timestamp},$(ts),g;
-            s,{/small},</sub>,g; s,{small},<sub>,g;
-            s,{question},<details><summary>Q: ,g; s,{/question},</details>,g; s,{small},<sub>,g;
-            s,{answer},</summary>,g; s,{/question},</details>,g; s,{small},<sub>,g;
-            s,{red},<span style='color:red'>,g; s,{/red},</span>,g;
-            s,{blue},<span style='color:blue'>,g; s,{/blue},</span>,g;
-            s,{green},<span style='color:green'>,g; s,{/green},</span>,g;
-            s,{yellow},<span style='color:yellow'>,g; s,{/yellow},</span>,g;
-            s,{gray},<span style='color:gray'>,g; s,{/gray},</span>,g;
-            s,{code},<code>,g; s,{/code},</code>,g;
-
 */
 #[cfg(test)]
 mod test {
@@ -224,6 +216,7 @@ mod test {
 {green}...{/green}
 {yellow}...{/yellow}
 {gray}...{/gray}
+{grey}...{/grey}
 "#;
 
         let expected = r#"
