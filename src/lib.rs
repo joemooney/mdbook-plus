@@ -6,6 +6,9 @@ use mdbook::preprocess::{Preprocessor, PreprocessorContext};
 //use pulldown_cmark::{Event, Options, Parser};
 //use pulldown_cmark_to_cmark::{cmark_with_options, Options as COptions};
 
+//#[macro_use]
+//extern crate log;
+
 pub struct MDBookPlus;
 
 impl Preprocessor for MDBookPlus {
@@ -80,17 +83,52 @@ fn build_toc<'a>(toc: &[(u32, String)]) -> String {
 }
 */
 
-fn search_and_replace(content: &str) -> Result<String> {
-    let s = content
-        .replace("{code}", "<code>")
-        .replace("{/code}", "</code>")
-        .replace("{small}", "<sub>")
-        .replace("{/small}", "</sub>")
-        .replace("{small}", "<sub>")
-        .replace("{/small}", "</sub>")
-        .replace("{red}", "  <span style='color:red'>")
+//fn replace_question_block(s: &str) -> String {
+//    let mut o = String::from(s);
+
+/// Replace {question}...{answer}...{/question} blocks with
+/// HTML <details> tag. This is a summary with collapsed  
+/// details block which serves as a question with a hidden
+/// answer.
+fn replace_question_block(s: String) -> String {
+    if !s.contains("{question}") {
+        return s;
+    }
+    let mut o = String::from(s);
+    while o.contains("{question}") {
+        o = o
+            .replace("{question}", "<details><summary>Q: ")
+            .replace("{answer}", "</summary>A: ")
+            .replace("\n?Q", "<details><summary>Q: ")
+            .replace("\n?A", "</summary>A: ")
+            .replace("\n?E", "</details>")
+            .replace("{/question}", "</details>");
+    }
+    o
+}
+
+/// Replace `...` with <code>...</code>
+// fn replace_code_block(s: String) -> String {
+//     if !s.contains("`") {
+//         return s;
+//     }
+//     let mut o = String::from(s);
+//     o = o.replace("```", "{three_backticks}");
+//     while o.contains("`") {
+//         o = o.replacen("`", "<code>", 1);
+//         if !o.contains("`") {
+//             warn!("Missing backtick");
+//         }
+//         o = o.replacen("`", "</code>", 1);
+//     }
+//     o = o.replace("{three_backticks}", "```");
+//     o
+// }
+
+fn replace_colors(s: String) -> String {
+    s.replace("{red}", "  <span style='color:red'>")
         .replace("{/red}", "</span>")
-        .replace("{blue}", "<span style='color:blue'>")
+        .replace("{blue}", "<span style='color:lightblue'>")
         .replace("{/blue}", "</span>")
         .replace("{green}", "<span style='color:green'>")
         .replace("{/green}", "</span>")
@@ -100,15 +138,49 @@ fn search_and_replace(content: &str) -> Result<String> {
         .replace("{/grey}", "</span>")
         .replace("{gray}", "<span style='color:gray'>")
         .replace("{/gray}", "</span>")
+}
+
+fn search_and_replace(content: &str) -> Result<String> {
+    let s = content
+        .replace("{code}", "<code>")
+        .replace("{/code}", "</code>")
+        .replace("{small}", "<sub>")
+        .replace("{/small}", "</sub>")
+        .replace("{small}", "<sub>")
+        .replace("{/small}", "</sub>");
+
+    let s = replace_colors(s);
+    // let s = replace_code_block(s);
+    let s = replace_question_block(s);
+
+    let s = s
         .replace("{question}", "<details><summary>Q: ")
         .replace("{answer}", "</summary>A: ")
-        .replace("{/question}", "</details>")
         .replace("\n?Q", "<details><summary>Q: ")
         .replace("\n?A", "</summary>A: ")
-        .replace("\n?E", "</details>");
-    if s != content {
-        eprintln!("{}", s)
-    }
+        .replace("\n?E", "</details>")
+        .replace("{/question}", "</details>");
+
+    let s = s
+        .replace("{pseudo}", "")
+        .replace("{pseudo-text}", "<details><summary>Pseudo Code</summary>")
+        .replace(
+            "{pseudo-code}",
+            "</details><details><summary>Solution</summary>",
+        )
+        .replace("{/pseudo}", "</details>");
+
+    let s = s
+        .replace("[#dash]", "\\-")
+        .replace("[#open_bracket]", "{")
+        .replace("[#close_bracket]", "}")
+        .replace("[#backtick]", "`")
+        .replace("[#question_mark]", "?");
+
+    // Uncomment if you want to print updates if content changed
+    // if s != content {
+    //     eprintln!("mdbook-plus updated <<{}>>", s)
+    // }
     return Ok(s);
 }
 
