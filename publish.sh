@@ -35,9 +35,9 @@ postprocess() {
 }
 
 book_changed() {
-  changes=$(git  diff  -U0 docs | egrep -v '^(\+\+\+|---) ' | egrep '^[+-]' | egrep -v 'Last Updated:' | wc -l)
-  [ $changes -eq 0 -a $opt_force -eq 0 ] && echo "[publish] No Book Changes" && return 1
-  return 0
+    changes=$(git  diff  -U0 docs | egrep -v '^(\+\+\+|---) ' | egrep '^[+-]' | egrep -v 'Last Updated:' | wc -l)
+    [ $changes -eq 0 -a $opt_force -eq 0 ] && echo "[publish] No Book Changes" && return 1
+    return 0
 }
 
 repo_url() {
@@ -46,10 +46,11 @@ repo_url() {
 
 # [optional] If repo has an mdbook
 build_book() {
+    git status -s | grep " md/" | sed 's/^/[git]/'
     [ ! -e book.toml ] && return 0
     mdbook build                                          && \
     postprocess                                           && \
-    rsync -avx --delete --info=progress2 ./book/ ./docs/  && \
+    rsync -ax --delete --info=progress2 ./book/ ./docs/  && \
     [ $opt_noexec -eq 0 ]                                 && \
     book_changed                                          && \
     return 0
@@ -59,15 +60,15 @@ build_book() {
 
 # [optional] If repo has an mdbook
 update_book_readme() {
-  # Update README.md in book if necessary
-  # cmp -s README.md $src/README.md || cp README.md $src/README.md
-  [[ README.md -nt $src/README.md ]] && cp -vp README.md $src/README.md
-  [[ $src/README.md -nt README.md ]] && cp -vp $src/README.md README.md
+    # Update README.md in book if necessary
+    # cmp -s README.md $src/README.md || cp README.md $src/README.md
+    [ ! -e book.toml ] && return 0
+    [[ README.md -nt $src/README.md ]] && cp -vp README.md $src/README.md
+    [[ $src/README.md -nt README.md ]] && cp -vp $src/README.md README.md
 }
 
 publish() { 
     build_book                                            && \
-    git status  | grep -v 'docs/'                         && \
     echo 'git commit -am'                                 && \
     echo -n "Comment: " && read comment                   && \
     git add .                                             && \
@@ -83,25 +84,25 @@ publish() {
 ####################################################################
 PARAMS=""
 while (( "$#" )); do
-  case "$1" in
-    -n|--no-exec) opt_noexec=1; shift ;;
-    -f|--force)   opt_force=1; shift; ;;
-    -b|--my-flag-with-argument)
-      if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
-        MY_FLAG_ARG=$2
-        shift 2
-      else
-        echo "Error: Argument for $1 is missing" >&2
-        exit 1
-      fi
-      ;;
+    case "$1" in
+        -n|--no-exec) opt_noexec=1; shift ;;
+        -f|--force)   opt_force=1; shift; ;;
+        -b|--my-flag-with-argument)
+            if [ -n "$2" ] && [ ${2:0:1} != "-" ]; then
+                MY_FLAG_ARG=$2
+                shift 2
+            else
+                echo "Error: Argument for $1 is missing" >&2
+                exit 1
+            fi
+            ;;
 
-    -*|--*=) # unsupported flags
-      echo "Error: Unsupported flag $1" >&2; exit 1;;
+        -*|--*=) # unsupported flags
+            echo "Error: Unsupported flag $1" >&2; exit 1;;
 
-    *) # preserve positional arguments
-      PARAMS="$PARAMS $1"; shift ;;
-  esac
+        *) # preserve positional arguments
+            PARAMS="$PARAMS $1"; shift ;;
+    esac
 done
 set positional arguments in their proper place
 eval set -- "$PARAMS"
@@ -111,9 +112,11 @@ eval set -- "$PARAMS"
 ####################################################################
 . ./git_functions.sh
 
+git status -s | grep -v ' docs/' | grep -v " md/" | sed 's/^/[git]/'
+
 update_book_readme
 
 git_check_untracked
-git_no_updates && echo "[info] No changes to publish" && exit 1
+git_no_updates && echo "[publish] No changes to publish" && exit 1
 
 publish
