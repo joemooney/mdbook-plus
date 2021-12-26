@@ -2,6 +2,7 @@ use mdbook::book::{Book, BookItem, Chapter};
 //use mdbook::errors::Error;
 use mdbook::errors::Result;
 use mdbook::preprocess::{Preprocessor, PreprocessorContext};
+use regex::Regex;
 //use pulldown_cmark::Tag::*;
 //use pulldown_cmark::{Event, Options, Parser};
 //use pulldown_cmark_to_cmark::{cmark_with_options, Options as COptions};
@@ -177,10 +178,32 @@ fn search_and_replace(content: &str) -> Result<String> {
         .replace("[#backtick]", "`")
         .replace("[#question_mark]", "?");
 
+    // <img src="mdbook-plantuml-img/xxx.svg" alt="" /></p>
+
+
+    let s = s
+        .replace("<img", "\\-")
+        .replace("[#open_bracket]", "{")
+        .replace("[#close_bracket]", "}")
+        .replace("[#backtick]", "`")
+        .replace("[#question_mark]", "?");
+
     // Uncomment if you want to print updates if content changed
     // if s != content {
     //     eprintln!("mdbook-plus updated <<{}>>", s)
     // }
+
+    // Convert <img.../> to <object.../> for plantuml images so that hyperlinks work
+    let mut s = s;
+    //let re = Regex::new(r#"<img src="(?P<src>mdbook-plantuml-img/.*)" alt="" />"#).unwrap();
+    let re = Regex::new(r#"....(?P<src>mdbook-plantuml-img/.*.svg)."#).unwrap();
+    if re.is_match(&s) {
+        s = re.replace_all(&s, r#"<object data="$src" type="image/svg+xml" >$src</object>"#).to_string();
+        eprintln!("mdbook-plus updated <<{}>>", s)
+    } else {
+        eprintln!("mdbook-plus not updated <<{}>>", s)
+    }
+
     return Ok(s);
 }
 

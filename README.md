@@ -17,6 +17,10 @@ I am using it since I want to support features not easily available in markdown:
 ?E
 ```
 
+## mdbook-plantuml
+
+The <img> element that is generated does not allow for embedded hyperlinks to be clickable. This needs to be changed to a <object> tag. This postprocessor will change the generated html.
+
 ## Examples
 
 After running through the preprocessor these will be converted to appropriate HTML.
