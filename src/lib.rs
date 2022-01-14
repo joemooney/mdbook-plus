@@ -199,9 +199,9 @@ fn search_and_replace(content: &str) -> Result<String> {
     let re = Regex::new(r#"....(?P<src>mdbook-plantuml-img/.*.svg)."#).unwrap();
     if re.is_match(&s) {
         s = re.replace_all(&s, r#"<object data="$src" type="image/svg+xml" >$src</object>"#).to_string();
-        eprintln!("mdbook-plus updated <<{}>>", s)
+        //eprintln!("mdbook-plus updated <<{}>>", s)
     } else {
-        eprintln!("mdbook-plus not updated <<{}>>", s)
+        //eprintln!("mdbook-plus not updated <<{}>>", s)
     }
 
     return Ok(s);
